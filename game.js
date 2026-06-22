@@ -265,6 +265,9 @@ function onJumpComplete() {
     landBounceStart = performance.now();
 
     generateNextBlock();
+    // Remove blocks far behind to avoid overlap (keep last 5)
+    const curIdx = blocks.indexOf(player.standingOn);
+    if (curIdx > 2) blocks.splice(0, curIdx - 2);
     animateCamera();
     state = 'IDLE';
   } else {
@@ -400,8 +403,8 @@ function drawMenu(w, h) {
   ctx.shadowBlur = 0;
 
   // stats card
-  const cx = w/2, cy = h*0.32;
-  const cw = w*0.7, ch = h*0.25;
+  const cx = w/2, cy = h*0.30;
+  const cw = w*0.7, ch = h*0.28;
   const cr = 20;
   ctx.fillStyle = 'rgba(255,255,255,0.13)';
   ctx.beginPath();
@@ -410,19 +413,21 @@ function drawMenu(w, h) {
 
   const stats = loadStats();
 
+  // high score label
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = `${w*0.04}px sans-serif`;
-  ctx.fillText('历史最高分', cx, cy + ch*0.3);
+  ctx.fillText('历史最高分', cx, cy + ch*0.25);
 
+  // high score value
   ctx.fillStyle = '#FFD700';
   ctx.font = `bold ${w*0.09}px sans-serif`;
   ctx.shadowColor = 'rgba(0,0,0,0.5)';
   ctx.shadowBlur = 3;
-  ctx.fillText(stats.high, cx, cy + ch*0.65);
+  ctx.fillText(stats.high, cx, cy + ch*0.55);
   ctx.shadowBlur = 0;
 
   // divider
-  const divY = cy + ch*0.78;
+  const divY = cy + ch*0.65;
   ctx.strokeStyle = 'rgba(255,255,255,0.2)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -430,12 +435,15 @@ function drawMenu(w, h) {
   ctx.lineTo(cx + cw/2 - 40, divY);
   ctx.stroke();
 
+  // games played label
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = `${w*0.035}px sans-serif`;
-  ctx.fillText('游玩次数', cx, cy + ch*0.55 + (ch*0.45)*0.4);
+  ctx.fillText('游玩次数', cx, cy + ch*0.78);
+
+  // games played value
   ctx.fillStyle = '#FFD700';
   ctx.font = `bold ${w*0.06}px sans-serif`;
-  ctx.fillText(stats.games + ' 局', cx, cy + ch*0.55 + (ch*0.45)*0.7);
+  ctx.fillText(stats.games + ' 局', cx, cy + ch*0.92);
 
   // start button
   const btnY = h*0.7;
@@ -759,6 +767,8 @@ function drawGameOver(w, h) {
 
 // ==================== INPUT ====================
 function getPos(e) {
+  // touchend uses changedTouches, touchstart uses touches
+  if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
   if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
   return { x: e.clientX, y: e.clientY };
 }
