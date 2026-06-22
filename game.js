@@ -4,11 +4,14 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 // --- responsive ---
+let SCALE = 1;
 function resize() {
   canvas.width = window.innerWidth * devicePixelRatio;
   canvas.height = window.innerHeight * devicePixelRatio;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(devicePixelRatio, devicePixelRatio);
+  SCALE = Math.min(window.innerWidth / 700, window.innerHeight / 600);
+  if (SCALE < 0.3) SCALE = 0.3;
 }
 resize();
 window.addEventListener('resize', resize);
@@ -136,8 +139,8 @@ function rand(min, max) { return min + Math.random()*(max-min); }
 function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
 // Isometric projection
-function isoX(wx, wy) { return (wx - wy) * COS30 - cameraX; }
-function isoY(wx, wy, wz) { return (wx + wy) * SIN30 - wz - cameraY; }
+function isoX(wx, wy) { return ((wx - wy) * COS30 - cameraX) * SCALE; }
+function isoY(wx, wy, wz) { return ((wx + wy) * SIN30 - wz - cameraY) * SCALE; }
 
 // ==================== GAME SETUP ====================
 function setupGame() {
@@ -492,8 +495,8 @@ function drawGame(w, h, now) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  const cx = w * 0.35;
-  const cy = h * 0.55;
+  const cx = w * 0.5;
+  const cy = h * 0.5;
   ctx.save();
   ctx.translate(cx, cy);
 
@@ -585,12 +588,12 @@ function drawCenterHint(block) {
   ctx.globalAlpha = 0.3;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI*2);
+  ctx.arc(cx, cy, 5 * SCALE, 0, Math.PI*2);
   ctx.stroke();
   ctx.globalAlpha = 0.5;
   ctx.fillStyle = `rgb(${255-r},${255-g},${255-b})`;
   ctx.beginPath();
-  ctx.arc(cx, cy, 2, 0, Math.PI*2);
+  ctx.arc(cx, cy, 2 * SCALE, 0, Math.PI*2);
   ctx.fill();
   ctx.globalAlpha = 1;
 }
@@ -614,9 +617,9 @@ function drawLandingMark(now) {
 
   let color, radius;
   switch (landingQuality) {
-    case QUALITY_PERFECT: color = '#FFD700'; radius = 13 * pulse; break;
-    case QUALITY_GOOD: color = '#FFF'; radius = 9 * pulse; break;
-    default: color = '#AAA'; radius = 6;
+    case QUALITY_PERFECT: color = '#FFD700'; radius = 13 * SCALE * pulse; break;
+    case QUALITY_GOOD: color = '#FFF'; radius = 9 * SCALE * pulse; break;
+    default: color = '#AAA'; radius = 6 * SCALE;
   }
 
   ctx.strokeStyle = color;
@@ -627,7 +630,7 @@ function drawLandingMark(now) {
   ctx.stroke();
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(mx, my, 3.5, 0, Math.PI*2);
+  ctx.arc(mx, my, 3.5 * SCALE, 0, Math.PI*2);
   ctx.fill();
   ctx.globalAlpha = 1;
 }
@@ -652,8 +655,8 @@ function drawPlayer() {
     if (bt >= 1) landBounceStart = 0;
   }
   const totalSquat = Math.max(chargeSquat, bounceSquat);
-  const bodyH = 50 * (1 - totalSquat * 0.55);
-  const bodyW = 28 * (1 + totalSquat * 0.35);
+  const bodyH = 50 * SCALE * (1 - totalSquat * 0.55);
+  const bodyW = 28 * SCALE * (1 + totalSquat * 0.35);
 
   const left = px - bodyW/2;
   const top = py - bodyH;
@@ -695,16 +698,16 @@ function drawPlayer() {
 function drawHUD(w, h, now) {
   // score
   ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 72px sans-serif';
+  ctx.font = `bold ${w*0.09}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowBlur = 4;
-  ctx.fillText(score, w/2, 100);
+  ctx.fillText(score, w/2, h*0.1);
   ctx.shadowBlur = 0;
 
   // power bar
   if (state === 'CHARGING') {
-    const barW = 180, barH = 12;
+    const barW = w * 0.45, barH = 8;
     const bx = w/2 - barW/2;
     const by = h * 0.72;
 
@@ -733,12 +736,12 @@ function drawBonus(w, h, now) {
   const alpha = 1 - elapsed / BONUS_DISPLAY_MS;
   const offY = -(elapsed / BONUS_DISPLAY_MS) * 60;
   const sh = player.standingOn ? player.standingOn.height : 60;
-  const sx = isoX(player.worldX, player.worldY) + w * 0.35;
-  const sy = isoY(player.worldX, player.worldY, sh) + h * 0.55 + offY - 40;
+  const sx = isoX(player.worldX, player.worldY) + w * 0.5;
+  const sy = isoY(player.worldX, player.worldY, sh) + h * 0.5 + offY - 40;
 
   ctx.fillStyle = '#FFD700';
   ctx.globalAlpha = alpha;
-  ctx.font = 'bold 56px sans-serif';
+  ctx.font = `bold ${w*0.07}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowBlur = 3;
@@ -752,17 +755,17 @@ function drawGameOver(w, h) {
   ctx.fillRect(0, 0, w, h);
 
   ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 56px sans-serif';
+  ctx.font = `bold ${w*0.07}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowBlur = 4;
-  ctx.fillText('Game Over', w/2, h/2 - 60);
-  ctx.fillText('Score: ' + score, w/2, h/2 + 20);
+  ctx.fillText('Game Over', w/2, h/2 - h*0.07);
+  ctx.fillText('Score: ' + score, w/2, h/2 + h*0.03);
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = '36px sans-serif';
-  ctx.fillText('Tap to restart', w/2, h/2 + 90);
+  ctx.font = `${w*0.045}px sans-serif`;
+  ctx.fillText('Tap to restart', w/2, h/2 + h*0.12);
 }
 
 // ==================== INPUT ====================
