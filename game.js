@@ -10,7 +10,7 @@ function resize() {
   canvas.height = window.innerHeight * devicePixelRatio;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(devicePixelRatio, devicePixelRatio);
-  SCALE = Math.min(window.innerWidth / 700, window.innerHeight / 600);
+  SCALE = Math.min(window.innerWidth / 900, window.innerHeight / 750, 0.85);
   if (SCALE < 0.3) SCALE = 0.3;
 }
 resize();
@@ -23,9 +23,9 @@ const H = () => window.innerHeight;
 const COS30 = Math.cos(Math.PI / 6);
 const SIN30 = Math.sin(Math.PI / 6);
 const MAX_CHARGE_MS = 1800;
-const MAX_JUMP_DIST = 380;
+const MAX_JUMP_DIST = 250;
 const JUMP_DURATION = 360;
-const JUMP_PEAK = 200;
+const JUMP_PEAK = 150;
 const CAMERA_DURATION = 320;
 const FALL_DURATION = 500;
 const BONUS_DISPLAY_MS = 800;
@@ -153,12 +153,12 @@ function setupGame() {
   jumpCount = 0;
   cameraX = 0; cameraY = 0;
 
-  const first = { worldX:0, worldY:0, width:120, depth:100, height:60, color:pick(PALETTE) };
+  const first = { worldX:0, worldY:0, width:80, depth:70, height:45, color:pick(PALETTE) };
   blocks.push(first);
 
-  const dist = rand(150, 350);
-  const wy = rand(-30, 30);
-  const second = { worldX:dist, worldY:wy, width:rand(80,180), depth:rand(70,120), height:rand(50,80), color:pick(PALETTE) };
+  const dist = rand(100, 220);
+  const wy = rand(-20, 20);
+  const second = { worldX:dist, worldY:wy, width:rand(60,120), depth:rand(50,80), height:rand(35,60), color:pick(PALETTE) };
   blocks.push(second);
 
   player = { worldX:0, worldY:0, worldZ:0, squash:0, standingOn:first };
@@ -177,7 +177,7 @@ function updateCameraTarget() {
     const px = player.standingOn.worldX;
     const py = player.standingOn.worldY;
     camTargetX = (px - py) * COS30;
-    camTargetY = (px + py) * SIN30 - (player.standingOn.height + 50);
+    camTargetY = (px + py) * SIN30 - (player.standingOn.height + 35);
   }
 }
 
@@ -322,13 +322,13 @@ function generateNextBlock() {
   const dirIdx = Math.floor(jumpCount / (2 + Math.floor(Math.random() * 2))) % BASE_ANGLES.length;
   const baseAngle = BASE_ANGLES[dirIdx];
   const angle = baseAngle + (Math.random() - 0.5) * 0.8;
-  const dist = rand(130, 380);
+  const dist = rand(90, 250);
   const next = {
     worldX: last.worldX + dist * Math.cos(angle),
     worldY: last.worldY + dist * Math.sin(angle),
-    width: rand(70, 190),
-    depth: rand(60, 120),
-    height: rand(45, 80),
+    width: rand(50, 140),
+    depth: rand(40, 90),
+    height: rand(35, 60),
     color: pick(PALETTE)
   };
   blocks.push(next);
@@ -655,8 +655,8 @@ function drawPlayer() {
     if (bt >= 1) landBounceStart = 0;
   }
   const totalSquat = Math.max(chargeSquat, bounceSquat);
-  const bodyH = 50 * SCALE * (1 - totalSquat * 0.55);
-  const bodyW = 28 * SCALE * (1 + totalSquat * 0.35);
+  const bodyH = 35 * SCALE * (1 - totalSquat * 0.55);
+  const bodyW = 20 * SCALE * (1 + totalSquat * 0.35);
 
   const left = px - bodyW/2;
   const top = py - bodyH;
